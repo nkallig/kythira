@@ -1,0 +1,632 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Συνοπτικός Οδηγός: Κύθηρα</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,600;0,700;1,400&display=swap');
+        
+        :root {
+            --primary: #1A5276;
+            --primary-light: #2980B9;
+            --accent: #E67E22;
+            --accent-bg: #FDF2E9;
+            --text-main: #2C3E50;
+            --text-muted: #627284;
+            --bg-body: #F4F7F9;
+            --bg-card: #FFFFFF;
+            --border-color: #EAECEE;
+            --radius: 16px;
+            --shadow: 0 4px 30px rgba(0, 0, 0, 0.04);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            color: var(--text-main);
+            line-height: 1.7;
+            background-color: var(--bg-body);
+            padding: 40px 20px;
+        }
+
+        .container {
+            max-width: 960px;
+            margin: 0 auto;
+        }
+
+        .page {
+            background: var(--bg-card);
+            padding: 50px;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            margin-bottom: 40px;
+            position: relative;
+            overflow: hidden;
+            page-break-after: always;
+        }
+
+        .page::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 6px;
+            background: linear-gradient(90deg, var(--primary), var(--primary-light));
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        h1 {
+            font-family: 'Playfair Display', serif;
+            color: var(--primary);
+            font-size: 46px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+        }
+
+        .subtitle {
+            font-size: 13px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 4px;
+            color: var(--accent);
+            display: inline-block;
+            border-bottom: 2px solid var(--accent-bg);
+            padding-bottom: 5px;
+        }
+
+        .map-wrapper {
+            margin: 35px 0;
+        }
+
+        #map {
+            width: 100%;
+            height: 450px;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border-color);
+            z-index: 1;
+        }
+
+        .map-caption {
+            font-size: 13px;
+            color: var(--text-muted);
+            text-align: center;
+            margin-top: 14px;
+            font-style: italic;
+        }
+
+        .tip-box {
+            background-color: #EBF5FB;
+            border-left: 4px solid var(--primary-light);
+            padding: 22px;
+            margin-bottom: 45px;
+            font-size: 15px;
+            border-radius: 0 var(--radius) var(--radius) 0;
+            color: #245575;
+            box-shadow: 0 2px 12px rgba(41, 128, 185, 0.05);
+        }
+
+        h2 {
+            font-family: 'Playfair Display', serif;
+            color: var(--primary);
+            font-size: 28px;
+            margin-top: 20px;
+            margin-bottom: 30px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        h2::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background-color: var(--border-color);
+        }
+
+        h3 {
+            color: var(--primary-light);
+            font-size: 19px;
+            font-weight: 600;
+            margin: 35px 0 15px 0;
+            padding-left: 12px;
+            border-left: 4px solid var(--accent);
+        }
+
+        /* Responsive Grid with Rich Background Images for Beaches */
+        .grid-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 25px;
+            margin-top: 20px;
+        }
+
+        .card {
+            background: #FFFFFF;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius);
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.02);
+            display: flex;
+            flex-direction: column;
+            transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 25px rgba(0,0,0,0.08);
+        }
+
+        .card-image {
+            height: 140px;
+            background-size: cover;
+            background-position: center;
+            position: relative;
+        }
+
+        .card-image::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 60%;
+            background: linear-gradient(to top, rgba(0,0,0,0.4), transparent);
+        }
+
+        .card-content {
+            padding: 20px;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .card-title {
+            font-size: 19px;
+            font-weight: 600;
+            color: var(--text-main);
+            margin-bottom: 12px;
+        }
+
+        .card-meta {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-bottom: 15px;
+        }
+
+        .meta-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+        }
+
+        .badge {
+            background: #F0F4F8;
+            color: var(--text-main);
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-weight: 500;
+            font-size: 12px;
+        }
+
+        .badge-wind {
+            background: #EAF2F8;
+            color: var(--primary-light);
+            font-weight: 600;
+        }
+
+        .badge-universal {
+            background: #E8F8F5;
+            color: #27AE60;
+            font-weight: 600;
+        }
+
+        .card-desc {
+            font-size: 14px;
+            color: var(--text-muted);
+            border-top: 1px dashed var(--border-color);
+            padding-top: 12px;
+            margin-top: auto;
+        }
+
+        /* Custom Elegant Lists Style */
+        ul {
+            list-style: none;
+            margin: 20px 0;
+        }
+
+        ul li {
+            position: relative;
+            padding-left: 28px;
+            margin-bottom: 14px;
+            font-size: 15px;
+        }
+
+        ul li::before {
+            content: "✦";
+            position: absolute;
+            left: 5px;
+            color: var(--accent);
+            font-size: 13px;
+        }
+
+        ul li strong {
+            color: var(--primary);
+            font-weight: 600;
+        }
+
+        /* Itinerary Timeline Design */
+        .plans-wrapper {
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+        }
+
+        .plan-box {
+            background: var(--accent-bg);
+            border-left: 5px solid var(--accent);
+            padding: 25px;
+            border-radius: 0 var(--radius) var(--radius) 0;
+            box-shadow: 0 4px 15px rgba(220, 118, 51, 0.03);
+        }
+
+        .plan-title {
+            font-weight: 700;
+            color: #A04000;
+            margin-bottom: 8px;
+            font-size: 17px;
+            font-family: 'Playfair Display', serif;
+        }
+
+        .plan-desc {
+            font-size: 14.5px;
+            color: #5E3A21;
+        }
+
+        @media (max-width: 768px) {
+            body { padding: 15px 10px; }
+            .page { padding: 30px 20px; margin-bottom: 20px; }
+            h1 { font-size: 34px; }
+            #map { height: 350px; }
+            .grid-container { grid-template-columns: 1fr; }
+        }
+
+        @media print {
+            body { background: none; color: #000; padding: 0; }
+            .page { box-shadow: none; margin: 0; padding: 30px; }
+            #map { height: 350px; }
+            .card { page-break-inside: avoid; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        
+        <div class="page">
+            <header>
+                <h1>Κύθηρα</h1>
+                <div class="subtitle">Συνοπτικός Οδηγός Διακοπών</div>
+            </header>
+            <div class="tip-box">
+                <strong>✏️ Eπιμέλεια:</strong> Nίκος Kαλλίγερος
+            </div>
+            <div class="map-wrapper">
+                <div id="map"></div>
+                <div class="map-caption">💡 Κάντε κλικ στις πινέζες για να δείτε τα κεντρικά σημεία ενδιαφέροντος του οδηγού.</div>
+            </div>
+            
+            <div class="tip-box">
+                <strong>💡 Tip:</strong> Επιλέξτε παραλία πάντα με βάση τον άνεμο. Όταν φυσάει Βοριάς (Β), επιλέγουμε τις νότιες παραλίες. Όταν φυσάει Νοτιάς (Ν), προτιμάμε τις βόρειες/ανατολικές.
+            </div>
+
+            <h2>🏖️ 1. Οι Παραλίες του Νησιού</h2>
+            
+            <div class="grid-container">
+                <div class="card">
+                    <div class="card-image" style="background-image: url('https://lh3.googleusercontent.com/gps-cs-s/APNQkAG88FwwQAU5trkFTf54O4jYu-_WLAZA94152wiK8R5Xi-8TpoN8aLVn4tzda5k5CkKus1w3vGaf6oIdqFufkUvvY_BVSjtFy5N7t6S0__vVOvc13FsqL-B-C4CRQy_zIZYs7v9g=w426-h240-k-no');"></div>
+                    <div class="card-content">
+                        <div class="card-title">Μελιδόνι</div>
+                        <div class="card-meta">
+                            <div class="meta-row"><span class="badge">Ξαπλώστρες, Καντίνα</span></div>
+                            <div class="meta-row"><span class="badge badge-wind">💨 Β, Β/Α, Β/Δ</span></div>
+                        </div>
+                        <div class="card-desc">🔥 Η αγαπημένη!</div>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <div class="card-image" style="background-image: url('https://lh3.googleusercontent.com/gps-cs-s/APNQkAH1IoCnw8iNK4LIFcIdcjCinVbyntut5WtHLvbaxASzSCJKryyvMkGIzXtJ5loGRQPlEvU8EvR_HYt2MjbtWktr-Y2qjXBbl-GXLEzydp7u3ff_kDwuXqhMu1E9r2XHBc5Po7vwxL1VbHo=w426-h240-k-no');"></div>
+                    <div class="card-content">
+                        <div class="card-title">Χαλκός</div>
+                        <div class="card-meta">
+                            <div class="meta-row"><span class="badge">Ξαπλώστρες, Καντίνα</span></div>
+                            <div class="meta-row"><span class="badge badge-wind">💨 Β, Β/Α, Β/Δ</span></div>
+                        </div>
+                        <div class="card-desc">✨ Σταθερή Αξία</div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-image" style="background-image: url('https://lh3.googleusercontent.com/gps-cs-s/APNQkAFeWU72qsijtafEHXAolSI5ggpV6RRsio9pYQFSrs_GUc4r_7PGyvic7cTv7Tr4GTjns8GRnVMaQsxAK_BLLsZxBGbjL1weQY-ZRhjdVOtu2zRmshQqrD3FX-sADGJB2ORSo1ChsA=w426-h240-k-no');"></div>
+                    <div class="card-content">
+                        <div class="card-title">Φυρή Άμμος (Κάλαμος)</div>
+                        <div class="card-meta">
+                            <div class="meta-row"><span class="badge">Ξαπλώστρες, Καντίνα</span></div>
+                            <div class="meta-row"><span class="badge badge-wind">💨 Ν, Ν/Δ, Β/Δ</span></div>
+                        </div>
+                        <div class="card-desc">Μεγάλη & διάσημη</div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-image" style="background-image: url('https://lh3.googleusercontent.com/gps-cs-s/APNQkAHZuO8fs5_xhNA4dTDxsUXGagCcsNCy1c0MLHA_rgaEWsRTX52j3zoVIvIGAqBBjS12u6bWDS5LxwER1Qu4itDQBo7QY6hoFv21ez95mc6uZOWIfuGCQ2P7HGiSDPNDOxWs6rbUPW-lDzfB=w426-h240-k-no');"></div>
+                    <div class="card-content">
+                        <div class="card-title">Καλαδί</div>
+                        <div class="card-meta">
+                            <div class="meta-row"><span class="badge">Ανοργάνωτη, Καντίνα πάνω πριν τα σκαλοπάτια</span></div>
+                            <div class="meta-row"><span class="badge badge-wind">💨 Ν, Ν/Δ, Β/Δ</span></div>
+                        </div>
+                        <div class="card-desc">Εμβληματική, με σκαλιά</div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-image" style="background-image: url('https://lh3.googleusercontent.com/gps-cs-s/APNQkAF7h1IEAplHRy-3ZHehJSDziyizaVhP1xnspORUhAbrEjW9Ya8JG3Pmhc2Q1rqs4U9jANeH0hx5eh64PsRAs8uKE6cINQtPK-RnP86g9zWzV5cYO9T_76A1Ao8KdvvCypoAxbj1=w408-h306-k-no');"></div>
+                    <div class="card-content">
+                        <div class="card-title">Κομπονάδα</div>
+                        <div class="card-meta">
+                            <div class="meta-row"><span class="badge">Ξαπλώστρες, Καντίνα</span></div>
+                            <div class="meta-row"><span class="badge badge-wind">💨 Ν, Ν/Δ, Β/Δ</span></div>
+                        </div>
+                        <div class="card-desc">Μεγάλα βότσαλα</div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-image" style="background-image: url('https://lh3.googleusercontent.com/gps-cs-s/APNQkAHtrKCGdlnjVcFyALrgWsG2n-XJVq0BksZp_tGArl_cDaGZcw9vguHKNpqr78wAhl0D0p9eCGaJGFtGMLjmfJOUXPKFQ_rHDNRORpLZbGv9cLkfXXAvBP77-q0jM76wpz7UW5lq=w408-h396-k-no');"></div>
+                    <div class="card-content">
+                        <div class="card-title">Καψάλι</div>
+                        <div class="card-meta">
+                            <div class="meta-row"><span class="badge">Θαλ. Ποδήλατα</span></div>
+                            <div class="meta-row"><span class="badge badge-wind">💨 Β, Β/Α, Β/Δ</span></div>
+                        </div>
+                        <div class="card-desc">Καραβάκι για Χύτρα</div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-image" style="background-image: url('https://lh3.googleusercontent.com/gps-cs-s/APNQkAGMaDcS0UHDRdOmuBj7ZE2P1mtZBeyqzBwerH4oGgW9jAUiK_9I1jXk64S2meED6oYIAmBk6vsfD9oJJXxLQgLI_WL4VLGcqiOK6hCi0J9dWtwMXqDJYJRR0IZzo7HzN64PlpZr2w=w408-h351-k-no');"></div>
+                    <div class="card-content">
+                        <div class="card-title">Καλάμι</div>
+                        <div class="card-meta">
+                            <div class="meta-row"><span class="badge">Ανοργάνωτη</span></div>
+                            <div class="meta-row"><span class="badge badge-wind">💨 Β, Β/Α, Β/Δ</span></div>
+                        </div>
+                        <div class="card-desc">Μονοπάτι & 3μ. σχοινί</div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-image" style="background-image: url('https://lh3.googleusercontent.com/gps-cs-s/APNQkAEFhg4JL_DlburaholsaSgb_5Qg6uBFwiDNpbyEOW8d27YS6sfBuP89JBzsRT9JrJgfak5gCQvPkW5R4Nk1nzqslUwFiIyqekWS5GdFUkYMqyVoolK5OuBjEisLHO1YeURNJk8=w408-h306-k-no');"></div>
+                    <div class="card-content">
+                        <div class="card-title">Λιμνιώνας</div>
+                        <div class="card-meta">
+                            <div class="meta-row"><span class="badge">Καντίνα</span></div>
+                            <div class="meta-row"><span class="badge badge-wind">💨 Β, Β/Α, Β/Δ</span></div>
+                        </div>
+                        <div class="card-desc">Μονοπάτι μισή ώρα για την πράσινη λίμνη</div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-image" style="background-image: url('https://lh3.googleusercontent.com/gps-cs-s/APNQkAEBBTsoeLsidSUxOQQijyr_07gTKnm5-rw2J_4fFCeotHVv_pyZzbw37sALCUC99ZJ8bcDOAmDJ8awCk0A1jH4OfEhnX8AZJ2tMVOvey_ku9vm9PF9m-5iSA9b54oh-I_pO-h3LLg=w408-h544-k-no');"></div>
+                    <div class="card-content">
+                        <div class="card-title">Λυκοδήμου</div>
+                        <div class="card-meta">
+                            <div class="meta-row"><span class="badge">Ξαπλώστρες, Καντίνα</span></div>
+                            <div class="meta-row"><span class="badge badge-wind">💨 Β, Β/Α, Β/Δ</span></div>
+                        </div>
+                        <div class="card-desc">Κάτι διαφορετικό</div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-image" style="background-image: url('https://lh3.googleusercontent.com/gps-cs-s/APNQkAGEoRKVzbMx9cNUn18VKnh5cS0XVi5STMIRuiN4T5haLOjE-XIN1ZJxgkXXPxdLc5_QW3BV7VNi2Dn1w4WLIRdQYmStcJDelc7RYr3HQKxkXuPgT-lH9cJv-y4ffKpguq7-9hSY=w408-h272-k-no');"></div>
+                    <div class="card-content">
+                        <div class="card-title">Φυρή Άμμος (Αγ. Πελαγία)</div>
+                        <div class="card-meta">
+                            <div class="meta-row"><span class="badge">Ανοργάνωτη</span></div>
+                            <div class="meta-row"><span class="badge badge-wind">💨 Ν, Ν/Δ, Ν/Α</span></div>
+                        </div>
+                        <div class="card-desc">Κοντά στην Αγ. Πελαγία</div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-image" style="background-image: url('https://lh3.googleusercontent.com/gps-cs-s/APNQkAFA5GmQfdgEM691sCruXNmjc0is-geJa4fW9DPC1rC06IWGkbl5mx4z45UpN6vkZtldg5r_DoQGT9XUrlAiKGg2fZaordwPH7r-Mfyv1hbop7cRyYw4-owa86Vz73-4R-0hD70=w408-h270-k-no');"></div>
+                    <div class="card-content">
+                        <div class="card-title">Φούρνοι</div>
+                        <div class="card-meta">
+                            <div class="meta-row"><span class="badge">Ξαπλώστρες, Καντίνα</span></div>
+                            <div class="meta-row"><span class="badge badge-wind">💨 Ν, Ν/Δ, Β/Δ</span></div>
+                        </div>
+                        <div class="card-desc">Ήρεμη επιλογή</div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-image" style="background-image: url('https://lh3.googleusercontent.com/gps-cs-s/APNQkAHI_bbuMnGF3UrlEclDjoZU9yTmeXw9Jb2mKUif9oVv3EDtFRi32Ag3txRbPUI3CcBKl_hwHZa83h7puO8vs8N21-YpyuXLnbptL_3p_UVsDMTfnigs9H5tgX_PuwbIM0tpqVkA=w427-h240-k-no');"></div>
+                    <div class="card-content">
+                        <div class="card-title">Κακή Λαγκάδα</div>
+                        <div class="card-meta">
+                            <div class="meta-row"><span class="badge">Ξαπλώστρες, Καντίνα</span></div>
+                            <div class="meta-row"><span class="badge badge-wind">💨 Ν, Ν/Δ, Ν/Α</span></div>
+                        </div>
+                        <div class="card-desc">Άγρια ομορφιά</div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-image" style="background-image: url('https://lh3.googleusercontent.com/gps-cs-s/APNQkAHg9IVbeRc952V9WYG5TAfP0yTJHv2-N4aJAmCmLVzBOi7fPoAI0g5kz6B-kWulfSoI-00bEfp0fG8IDqr1xBQ8aJ-JANs6DRKQtBirHXV6vzG_0KlwpZ15sjF3ae1icS43Tu0h=w425-h240-k-no');"></div>
+                    <div class="card-content">
+                        <div class="card-title">Λίμνη - Πιάτσα (Παλαιόπολη)</div>
+                        <div class="card-meta">
+                            <div class="meta-row"><span class="badge">Ανοργάνωτη</span></div>
+                            <div class="meta-row"><span class="badge badge-wind">💨 Ν, Ν/Δ, Β/Δ</span></div>
+                        </div>
+                        <div class="card-desc">Στην Παλαιόπολη</div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-image" style="background-image: url('https://lh3.googleusercontent.com/gps-cs-s/APNQkAEXoC0DlBLoi22M7U3AteySoPY7KEPHX_jfvg9W69ZOylgJDCnIMq31suIu5uhrIvb53nCo8fJxRn2oXuw7wSS9UqzaB9cqEZBjFJToTK-MUwEa21rRaYxoIptYt4IPLO9CEH-QGTAQZIE=w408-h306-k-no');"></div>
+                    <div class="card-content">
+                        <div class="card-title">Διακόφτι</div>
+                        <div class="card-meta">
+                            <div class="meta-row"><span class="badge">Ξαπλώστρες, Καντίνα</span></div>
+                            <div class="meta-row"><span class="badge badge-universal">💨 Όλοι οι άνεμοι</span></div>
+                        </div>
+                        <div class="card-desc">Σαν την γαλάζια λίμνη, αμμουδιά, ρηχά νερά κατάλληλο για παιδιά</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="page">
+            <h2>📸 2. Αξιοθέατα & Σημεία για Βόλτα</h2>
+            <ul>
+                <li><strong>Χώρα – Κάστρο – Καψάλι:</strong> Περπάτημα στα σοκάκια και το μεσαιωνικό κάστρο.</li>
+                <li><strong>Αβλέμονας:</strong> Το πιο γραφικό, κυκλαδίτικο λιμανάκι του νησιού.</li>
+                <li><strong>Μυλοπόταμος:</strong> Πεζοπορία στους Νερόμυλους και τον Καταρράκτη της Φόνισσας.</li>
+                <li><strong>Παλιόχωρα:</strong> Η ερειπωμένη βυζαντινή καστροπολιτεία (ιδανικό για πεζοπορία).</li>
+                <li><strong>Πηγές Αμίρ Αλί:</strong> Καταπράσινη τοποθεσία για χαλάρωση στον Καραβά.</li>
+                <li><strong>Λιβάδι (12 Γεφύρια):</strong> Το ιστορικό πέτρινο γεφύρι στο Κατούνι.</li>
+                <li><strong>Ποταμός & Αγία Πελαγία:</strong> Τα ζωντανά κεφαλοχώρια του βορρά.</li>
+                <li><strong>Μοναστήρι Μυρτιδίων:</strong> Η ιστορική Ιερά Μονή, προστάτιδα του νησιού.</li>
+                <li><strong>Φαρός Μουδάρι:</strong> Εύκολη πεζοπορία από την Πλατιά Άμμο περνά από τον ιστορικό φάρο Μουδάρι και στη συνέχεια κατηφορίζει στη βοτσαλωτή παραλία του Άη Νικόλα.</li>
+            </ul>
+
+            <h2>🍽️ 3. Φαγητό, Καφέ & Διασκέδαση</h2>
+            
+            <h3>Πού θα φάτε:</h3>
+            <ul>
+                <li><strong>Φιλιώ (Κάλαμος):</strong> Παραδοσιακή κουζίνα, ανοίγει μετά τις 16:00.</li>
+                <li><strong>Πλάτανος (Μυλοπόταμος):</strong> Κάτω από τη σκιά των πλατάνων στην πλατεία.</li>
+                <li><strong>Σκάνδεια (Παλαιόπολη):</strong> Ιστορική και σταθερή αξία για μαγειρευτά.</li>
+                <li><strong>Τοξότης / Πιέρρος (Λιβάδι):</strong> Εξαιρετικές επιλογές για ντόπια κρέατα.</li>
+                <li><strong>Trattamento / Μάγος / Alatarea fish restaurant (Καψάλι):</strong> Φρέσκο ψάρι και θαλασσινά δίπλα στο κύμα.</li>
+                <li><strong>Κάπαρη (Καψάλι):</strong> Προσεγμένα πιάτα με σύγχρονη ματιά.</li>
+                <li><strong>Ψωμολαδέα / Σωτήρης (Αβλέμονας):</strong> Μεζέδες και ψάρι στο γραφικό λιμανάκι.</li>
+                <li><strong>Φαμίλια (Φράτσια):</strong> Ιδιαίτερες, δημιουργικές γεύσεις.</li>
+                <li><strong>Tony's Pizza (Χώρα):</strong>Φοβερή pizza με θέα σε ταράτσα</li>
+                <li><strong>Μανώλης (Διακόφτι):</strong>Φρέσκο ψάρι και θαλασσινά δίπλα στο κύμα.</li>
+                <li><strong>Belvedere / Ζορμπάς (Χώρα):</strong> Ιδανικά για pizza ή γρήγορο σουβλάκι.</li>
+                <li><strong>Ξεγάτζαρος (Τσικαλαρία):</strong> Αυθεντική, παραδοσιακή ψησταριά.</li>
+                <li><strong>Ακρογιάλι (Αγ. Πελαγία):</strong> Μπροστά στη θάλασσα .</li>
+            </ul>
+
+            <h3>Για Καφέ, Πρωινό & Ποτό:</h3>
+            <ul>
+                <li><strong>Φόσσα & Bon Bon Fait Maison (Χώρα):</strong> Κορυφαίο πρωινό, καφέδες και κρέπες.</li>
+                <li><strong>Mercato (Χώρα):</strong> Το κλασικό και αγαπημένο bar στα στενά της Χώρας.</li>
+                <li><strong>Fox Anglais (Καψάλι):</strong> Ποτό με όμορφη θέα στον κόλπο.</li>
+                <li><strong>Κούκος (Χώρα - Καψάλι):</strong> Cocktail bar σε πολύ προσεγμένο σημείο.</li>
+                <li><strong>Αστικόν (Ποταμός):</strong> Ιστορικό καφενείο-μπαρ με εναλλακτική ατμόσφαιρα.</li>
+                <li><strong>Αραχτοπωλείο (Αβλέμονας):</strong> Χαλαρό café-bar ακριβώς δίπλα στο λιμανάκι.</li>
+                <li><strong>Bakery Ta Kithira (Καρβουνάδες):</strong> Καφέ πακέτο και Πάστα φλώρα</li>
+                <li><strong>Αρτοποιείο Καραβά (Καραβάς/Χώρα):</strong> Τα καλύτερα παξιμάδια</li>
+            </ul>
+        </div>
+
+        <div class="page">
+            <h2>🗺️ 4. Έτοιμα Ημερήσια Πλάνα</h2>
+            
+            <div class="plans-wrapper">
+                <div class="plan-box">
+                    <div class="plan-title">Πλάνο 1: Τα Νότια & Παραδοσιακά</div>
+                    <div class="plan-desc">Μπάνιο σε Χαλκό, Φυρή Άμμο ή Κομπονάδα ➡️ Φαγητό στη <em>Φιλιώ</em> στον Κάλαμο (ανοίγει μετά τις 16:00).</div>
+                </div>
+
+                <div class="plan-box">
+                    <div class="plan-title">Πλάνο 2: Φύση, Δροσιά & Δύση</div>
+                    <div class="plan-desc">Βόλτα στον Μυλοπόταμο, πεζοπορία στους νερόμυλους ➡️ Μπάνιο σε Λυκοδήμου, Καλάμι ή Λιμιώνα ➡️ Φαγητό στον <em>Πλάτανο</em>.</div>
+                </div>
+
+                <div class="plan-box">
+                    <div class="plan-title">Πλάνο 3: Ηλιοβασίλεμα & Μοναστήρι</div>
+                    <div class="plan-desc">Μπάνιο στο Μελιδόνι ➡️ Επίσκεψη στο Μοναστήρι της Παναγίας & στο ξωκλήσι του Αγ. Νικολάου Κρασά για το λιόγερμα ➡️ Φαγητό στον <em>Τοξότη</em> ή τον <em>Πιέρρο</em> στο Λιβάδι.</div>
+                </div>
+
+                <div class="plan-box">
+                    <div class="plan-title">Πλάνο 4: Ανατολική Μαγεία</div>
+                    <div class="plan-desc">Μπάνιο στο Καλαδί ή στη Λίμνη-Πιάτσα (Παλαιόπολη) ➡️ Απογευματινή βόλτα στον Αβλέμονας ➡️ Φαγητό στη <em>Σκάνδεια</em>.</div>
+                </div>
+
+                <div class="plan-box">
+                    <div class="plan-title">Πλάνο 5: Η Διαδρομή του Βορρά</div>
+                    <div class="plan-desc">Μπάνιο στην Κακή Λαγκάδα ή τους Φούρνους ➡️ Φαγητό στην Αγία Πελαγία ➡️ Χαλαρή απογευματινή βόλτα στον Ποταμό.</div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        // Αρχικοποίηση χάρτη στα Κύθηρα
+        var map = L.map('map').setView([36.2300, 23.0000], 10);
+
+        // Φόρτωση των γραφικών του χάρτη
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors'
+        }).addTo(map);
+
+        // Προσθήκη σημείων ενδιαφέροντος
+        var locations = [
+            { name: "<b>Χώρα Κυθήρων</b><br>Κάστρο, Μπαράκια (Mercato, Φόσσα)", coords: [36.1428, 22.9892] },
+            { name: "<b>Καψάλι</b><br>Παραλία, Φαγητό (Trattamento, Μάγος, Κάπαρη)", coords: [36.1435, 23.0018] },
+            { name: "<b>Αβλέμονας</b><br>Λιμανάκι, Ψωμολαδέα, Αραχτοπωλείο", coords: [36.2269, 23.0805] },
+            { name: "<b>Μυλοπόταμος</b><br>Καταρράκτης, Εστιατόριο Πλάτανος", coords: [36.2441, 22.9461] },
+            { name: "<b>Ποταμός</b><br>Κεφαλοχώρι, Αστικόν Καφενείο", coords: [36.2997, 22.9604] },
+            { name: "<b>Λιβάδι</b><br>Γεφύρι Κατούνι, Τοξότης, Πιέρρος", coords: [36.1735, 22.9926] },
+            { name: "<b>Διακόφτι</b><br>Κεντρικό Λιμάνι & Παραλία 'Πισίνα'", coords: [36.2647, 23.0802] },
+            { name: "<b>Παλαιόπολη</b><br>Παραλία, Εστιατόριο Σκάνδεια", coords: [36.2292, 23.0564] },
+            { name: "<b>Μελιδόνι</b><br>Παραλία", coords: [36.160179, 22.948031] },
+            { name: "<b>Χαλκός</b><br>Παραλία", coords: [36.135228, 23.034690] },
+            { name: "<b>Φυρή Άμμος (Κάλαμος)</b><br>Παραλία", coords: [36.171646, 23.045771] },
+            { name: "<b>Καλαδί</b><br>Παραλία", coords: [36.210905, 23.052294] },
+            { name: "<b>Κομπονάδα</b><br>Παραλία", coords: [36.188529, 23.044907] },
+            { name: "<b>Καλάμι</b><br>Παραλία, (Μονοπάτι και στο τέλος 3 μέτρα σχοινί κατάβασης)", coords: [36.254325, 22.923341] },
+            { name: "<b>Λιμνιώνας</b><br>Παραλία, (Μονοπάτι για πράσινη λίμνη)", coords: [36.234966, 22.905255] },
+            { name: "<b>Πράσινη Λίμνη</b><br>", coords: [36.225620, 22.903833] },
+            { name: "<b>Λυκοδήμου</b><br>Παραλία", coords: [36.286641, 22.923070] },
+            { name: "<b>Φυρή Άμμος (Αγ. Πελαγία)</b><br>Παραλία", coords: [36.319002, 22.989482] },
+            { name: "<b>Λίμνη - Πιάτσα (Παλαιόπολη)</b><br>Παραλία", coords: [36.220180, 23.055705] },
+            { name: "<b>Κακή Λαγκάδα</b><br>Παραλία", coords: [36.311006, 22.999234] },
+            { name: "<b>Φαρός Μουδάρι</b><br>Εύκολη πεζοπορία από την Πλατιά Άμμο περνά από τον ιστορικό φάρο Μουδάρι και στη συνέχεια κατηφορίζει στη βοτσαλωτή παραλία του Άη Νικόλα", coords: [36.381169, 22.950163] },
+            { name: "<b>Κάλαμος</b><br>Ταβέρνα Φιλιώ, κοντά στις παραλίες Χαλκός & Φυρή Άμμος", coords: [36.1621, 23.0185] }
+        ];
+
+        // Τοποθέτηση των pins στο χάρτη
+        locations.forEach(function(loc) {
+            L.marker(loc.coords).addTo(map).bindPopup(loc.name);
+        });
+    </script>
+</body>
+</html>
